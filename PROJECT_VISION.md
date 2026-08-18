@@ -7,7 +7,7 @@ Build an institutional-grade, modular quantitative trading engine.
 - Win rate target: 70-80%
 - 8-12 trades/day
 - M15 execution
-- Multi-symbol (Forex + Gold)
+- Multi-symbol (Forex + Gold) — via multiple independent symbol-scoped runtime instances, one per symbol, not a single runtime spanning multiple symbols (ADR-001)
 
 ## Confirmed Philosophy
 - Evidence-based trading

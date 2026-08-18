@@ -281,6 +281,7 @@ Circumventing contracts.
 Creating hidden dependencies.
 Bypassing defined interfaces.
 Embedding business logic within infrastructure components.
+Assuming chart or process attachment provides position/order isolation without explicit symbol + magic/instance-ID filtering (ADR-001).
 6.3 Allowed Evolution
 
 Implementation may:
@@ -300,6 +301,16 @@ Such improvements shall not alter architectural intent.
 Architectural drift shall be treated as a software defect.
 
 Whenever implementation begins to violate established module boundaries, corrective refactoring shall take precedence over feature development.
+
+6.5 Runtime Instance Scope
+
+Implementation shall assume, for every engine, that it belongs to exactly one Quantum runtime instance: one trading symbol, one Strategy ID, one Instance ID, one Magic Number (ADR-001, Symbol-Scoped Runtime Architecture).
+
+Multiple symbols are implemented as multiple independent running instances, never as one instance iterating internally over several symbols. Multiple independently identified instances may run on the same symbol (parameter variants, strategy versions, A/B tests); Symbol alone is not sufficient runtime identity, and implementation shall not assume it is.
+
+Runtime independence does not mean financial independence. All instances may share one MT5 account, so account equity, margin, and broker-level constraints are inherently shared even though runtime state is not. Implementation shall not treat account-level financial figures as if they belonged exclusively to one instance.
+
+Portfolio-level or cross-instance coordination of any kind is out of scope for V1 implementation and shall not be built inside any symbol-scoped engine. See Chapter 23 and ADR-001.
 
 Chapter 7 — Engine Implementation Lifecycle
 
@@ -379,6 +390,33 @@ Performance validation
 Every engine shall undergo architectural and technical review before integration.
 
 Implementation review is considered mandatory—not optional.
+
+7.7 Restart Recovery
+
+Implementation shall not assume that runtime state starts empty after an EA restart, recompile, terminal restart, or chart refresh.
+
+Any engine that manages broker-side state — principally the Position Lifecycle Engine — shall, at `OnInit`, reconstruct its relevant runtime state from authoritative broker/terminal truth rather than from in-memory assumptions:
+
+Resolve Instance Identity
+        │
+        ▼
+Resolve Symbol
+        │
+        ▼
+Discover Existing Positions
+        │
+        ▼
+Filter by Symbol + Magic / Ownership
+        │
+        ▼
+Reconstruct Position State
+        │
+        ▼
+Resume Normal Processing
+
+A position matching the instance's symbol but not its magic/instance identity is never this instance's position and shall never be modified, even where no in-memory record of it exists. A broker-side position matching the instance's identity with no corresponding decision record on file is orphaned state: it shall be logged and surfaced through Observability, never silently adopted or silently ignored.
+
+This is a contract requirement, defined in `Contracts/Shared Data Objects.md`, and is verified in Chapter 7.5 (Verification) and Chapter 20 (Testing) like any other functional requirement — the existing "Restart recovery" robustness test case is not sufficient on its own without this reconstruction contract behind it.
 
 Chapter 8 — Engine Dependency Hierarchy
 8.1 Dependency Philosophy
@@ -1405,7 +1443,8 @@ Execution Layer
 Order Manager
 Trade Lifecycle
 Risk Controller
-Portfolio Manager
+
+(Portfolio-level coordination — including any future "Portfolio Manager" component — is Future / Deferred Architecture, not part of the V1 symbol-scoped roadmap. It is out of scope for core Quantum and may only be scheduled following a dedicated future architectural decision and ADR. See ADR-001, Sections 15 and 33.)
 
 ↓
 
