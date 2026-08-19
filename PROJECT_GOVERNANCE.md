@@ -19,6 +19,9 @@ Applies To
 
 ---
 
+Genesis documentation repository structure is authoritative during Genesis.
+Implementation source structure shall be established according to SYSTEM_ARCHITECTURE.md and IMPLEMENTATION_ARCHITECTURE.md before implementation begins.
+
 # Purpose
 
 This document defines how Project Quantum is developed,

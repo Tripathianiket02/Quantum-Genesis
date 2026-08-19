@@ -1,4 +1,6 @@
 # PROJECT QUANTUM — ARCHITECTURE AUDIT
+HISTORICAL REVIEW — NOT CURRENT ARCHITECTURE
+Findings superseded by subsequent architecture reconciliation.
 ### Principal Engineering Review — Pre-Implementation Stage
 Reviewer role: Principal Software Engineer / Institutional Code Auditor
 Scope reviewed: `MASTER_DESIGN_BIBLE.md`, `SYSTEM_ARCHITECTURE.md`, `PROJECT_GOVERNANCE.md`, `Project Structure.md`, `Architecture.md`, and all 12 module specification prompts.
