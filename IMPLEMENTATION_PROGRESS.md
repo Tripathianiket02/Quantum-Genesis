@@ -234,8 +234,4 @@ WAITING FOR APPROVAL for P1.2 — Runtime Identity.
 
 ## Next Action
 
-<<<<<<< codex/complete-implementation-readiness-inspection-metlhd
 WAITING FOR APPROVAL for P1.2 — Runtime Identity.
-=======
-WAITING FOR APPROVAL for P1.2 — Runtime Identity.
->>>>>>> main
