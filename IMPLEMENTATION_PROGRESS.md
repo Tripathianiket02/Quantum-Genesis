@@ -1,4 +1,3 @@
-<<<<<<< codex/complete-implementation-readiness-inspection-metlhd
 # Project Quantum Implementation Progress
 
 Status:
@@ -127,8 +126,6 @@ WAITING FOR APPROVAL for P1.2 — Runtime Identity.
 | Configuration model | PLANNED |
 | Event / cycle mechanism | PLANNED |
 | Logging foundation | PLANNED |
-=======
->>>>>>> main
 | Kernel orchestration | PLANNED |
 | Analysis engines | NOT STARTED |
 | Trade Quality Engine | NOT STARTED |
