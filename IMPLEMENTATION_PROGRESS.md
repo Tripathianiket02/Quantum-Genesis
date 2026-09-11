@@ -99,10 +99,10 @@ Implementation Status:
 REQUIRED FIXES APPLIED; NOT VERIFIED
 
 Verification Status:
-REQUIRED FIXES AND TEST UPDATES IMPLEMENTED. MQL5 compilation not performed in this environment. P1.2 remains NOT VERIFIED pending actual compilation/runtime verification.
+REQUIRED FIXES AND TEST UPDATES IMPLEMENTED. A MetaEditor compiler attempt found MQL5-incompatible numeric literals in RuntimeIdentity; those literals have been corrected pending another MetaEditor compilation. P1.2 remains NOT VERIFIED pending actual compilation/runtime verification.
 
 Known Issues:
-- MQL5 compilation could not be executed in the current environment.
+- MQL5 compilation requires local MetaEditor verification. A previous MetaEditor attempt found numeric-literal compatibility errors in RuntimeIdentity; the source correction is pending another compile.
 - ADR-001 requires the final identifier-generation mechanism to be deterministic, explicit, MQL5-friendly, and not unnecessarily complicated, but does not prescribe a concrete algorithm. P1.2 uses a small local 32-bit FNV-1a-derived deterministic calculation and records this implementation decision for review.
 
 Blocked Items:
@@ -230,7 +230,7 @@ Files Completed:
 - IMPLEMENTATION_PROGRESS.md
 
 Verification:
-Required fixes applied and test coverage updated. MQL5 compilation not performed in this environment. P1.2 remains NOT VERIFIED pending actual compilation/runtime verification.
+Required fixes applied and test coverage updated. A MetaEditor compiler attempt found MQL5-incompatible numeric literals in RuntimeIdentity; the source correction is pending another MetaEditor compilation. P1.2 remains NOT VERIFIED pending actual compilation/runtime verification.
 
 ---
 
@@ -240,6 +240,7 @@ Required fixes applied and test coverage updated. MQL5 compilation not performed
 |------|-----------|--------|---------------------|
 | 2026-09-09 | P1.2 Runtime Identity | Replaced delimiter-based hashing with fixed-order length-prefixed FNV-1a field hashing; added leading/trailing whitespace rejection and const-correct read API. | NOT VERIFIED; MQL5 compilation not performed in this environment. |
 | 2026-09-09 | P1.2 Runtime Identity tests | Added symbol differentiation, retry-after-failure, uninitialized comparison, delimiter ambiguity, and whitespace regression coverage. | NOT VERIFIED pending actual compilation/runtime verification. |
+| 2026-09-10 | P1.2 Runtime Identity | Replaced C/C++-suffixed hexadecimal numeric literals with MQL5-compatible decimal arithmetic and casts after MetaEditor reported numeric-literal errors. | NOT VERIFIED; another local MetaEditor compilation is required. |
 
 ---
 

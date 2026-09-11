@@ -36,8 +36,10 @@ private:
    uint HashCharacter(const uint hash_value, const ushort character) const
    {
       // 32-bit FNV-1a step. Deterministic, explicit, local, and MQL5-friendly.
+      const ulong fnv_prime = 16777619;
       ulong next_hash = (ulong)(hash_value ^ (uint)character);
-      next_hash = (next_hash * 16777619UL) & 0xFFFFFFFFUL;
+      next_hash = next_hash * fnv_prime;
+      // The cast explicitly retains the low 32 bits required by FNV-1a-32.
       return (uint)next_hash;
    }
 
@@ -47,7 +49,7 @@ private:
 
       for(int byte_index = 0; byte_index < 4; byte_index++)
       {
-         const uint length_byte = (length >> (byte_index * 8)) & 0xFFU;
+         const uint length_byte = (length >> (byte_index * 8)) % 256;
          hash = HashCharacter(hash, (ushort)length_byte);
       }
 
@@ -71,7 +73,7 @@ private:
                              const string instance_id,
                              const string symbol) const
    {
-      uint hash = (uint)2166136261UL;
+      uint hash = (uint)2166136261;
       hash = HashLength(hash, (uint)StringLen(strategy_id));
       hash = HashString(hash, strategy_id);
       hash = HashLength(hash, (uint)StringLen(symbol));
@@ -80,7 +82,7 @@ private:
       hash = HashString(hash, instance_id);
 
       // Keep the value positive and comfortably within signed 32-bit integer range.
-      return (long)(100000 + (hash % 900000000U));
+      return (long)(100000 + (hash % 900000000));
    }
 
    public:
