@@ -20,20 +20,43 @@ private:
    long   m_magic_number;
    bool   m_initialized;
 
-   bool IsNonEmpty(const string value)
+   bool IsNonEmpty(const string value) const
    {
       return (StringLen(value) > 0);
    }
 
-   uint HashCharacter(const uint hash_value, const ushort character)
+   bool HasLeadingOrTrailingWhitespace(const string value) const
+   {
+      string trimmed_value = value;
+      StringTrimLeft(trimmed_value);
+      StringTrimRight(trimmed_value);
+      return (trimmed_value != value);
+   }
+
+   uint HashCharacter(const uint hash_value, const ushort character) const
    {
       // 32-bit FNV-1a step. Deterministic, explicit, local, and MQL5-friendly.
+      const ulong fnv_prime = 16777619;
       ulong next_hash = (ulong)(hash_value ^ (uint)character);
-      next_hash = (next_hash * 16777619UL) & 0xFFFFFFFFUL;
+      next_hash = next_hash * fnv_prime;
+      // The cast explicitly retains the low 32 bits required by FNV-1a-32.
       return (uint)next_hash;
    }
 
-   uint HashString(const uint hash_value, const string value)
+   uint HashLength(const uint hash_value, const uint length) const
+   {
+      uint hash = hash_value;
+
+      for(int byte_index = 0; byte_index < 4; byte_index++)
+      {
+         const uint length_byte = (length >> (byte_index * 8)) % 256;
+         hash = HashCharacter(hash, (ushort)length_byte);
+      }
+
+      return hash;
+   }
+
+   uint HashString(const uint hash_value, const string value) const
    {
       uint hash = hash_value;
       const int length = StringLen(value);
@@ -48,17 +71,18 @@ private:
 
    long CalculateMagicNumber(const string strategy_id,
                              const string instance_id,
-                             const string symbol)
+                             const string symbol) const
    {
-      uint hash = (uint)2166136261UL;
+      uint hash = (uint)2166136261;
+      hash = HashLength(hash, (uint)StringLen(strategy_id));
       hash = HashString(hash, strategy_id);
-      hash = HashCharacter(hash, (ushort)StringGetCharacter("|", 0));
+      hash = HashLength(hash, (uint)StringLen(symbol));
       hash = HashString(hash, symbol);
-      hash = HashCharacter(hash, (ushort)StringGetCharacter("|", 0));
+      hash = HashLength(hash, (uint)StringLen(instance_id));
       hash = HashString(hash, instance_id);
 
       // Keep the value positive and comfortably within signed 32-bit integer range.
-      return (long)(100000 + (hash % 900000000U));
+      return (long)(100000 + (hash % 900000000));
    }
 
    public:
@@ -95,6 +119,16 @@ private:
                          "Provide the configured Quantum strategy identifier during initialization.");
          return false;
       }
+
+      if(HasLeadingOrTrailingWhitespace(strategy_id))
+      {
+         result.SetError(QUANTUM_COMPONENT_PLATFORM,
+                         QUANTUM_ERROR_INVALID_ARGUMENT,
+                         "CQuantumRuntimeIdentity.Initialize",
+                         "StrategyID must not contain leading or trailing whitespace.",
+                         "Remove leading or trailing whitespace from StrategyID before initialization.");
+         return false;
+      }
       
       if(!IsNonEmpty(instance_id))
       {
@@ -106,6 +140,16 @@ private:
          return false;
       }
 
+      if(HasLeadingOrTrailingWhitespace(instance_id))
+      {
+         result.SetError(QUANTUM_COMPONENT_PLATFORM,
+                         QUANTUM_ERROR_INVALID_ARGUMENT,
+                         "CQuantumRuntimeIdentity.Initialize",
+                         "InstanceID must not contain leading or trailing whitespace.",
+                         "Remove leading or trailing whitespace from InstanceID before initialization.");
+         return false;
+      }
+
       if(!IsNonEmpty(symbol))
       {
          result.SetError(QUANTUM_COMPONENT_PLATFORM,
@@ -113,6 +157,16 @@ private:
                          "CQuantumRuntimeIdentity.Initialize",
                          "Symbol is required for symbol-scoped runtime binding.",
                          "Pass the bound chart/runtime symbol during initialization.");
+         return false;
+      }
+
+      if(HasLeadingOrTrailingWhitespace(symbol))
+      {
+         result.SetError(QUANTUM_COMPONENT_PLATFORM,
+                         QUANTUM_ERROR_INVALID_ARGUMENT,
+                         "CQuantumRuntimeIdentity.Initialize",
+                         "Symbol must not contain leading or trailing whitespace.",
+                         "Remove leading or trailing whitespace from Symbol before initialization.");
          return false;
       }
 
@@ -139,37 +193,37 @@ private:
       return true;
    }
 
-   bool IsInitialized()
+   bool IsInitialized() const
    {
       return m_initialized;
    }
 
-   string Symbol()
+   string Symbol() const
    {
       return m_symbol;
    }
 
-   string StrategyID()
+   string StrategyID() const
    {
       return m_strategy_id;
    }
 
-   string InstanceID()
+   string InstanceID() const
    {
       return m_instance_id;
    }
 
-   long MagicNumber()
+   long MagicNumber() const
    {
       return m_magic_number;
    }
 
-   bool MatchesOwnership(const string symbol, const long magic_number)
+   bool MatchesOwnership(const string symbol, const long magic_number) const
    {
       return (m_initialized && symbol == m_symbol && magic_number == m_magic_number);
    }
 
-   bool SameRuntimeAs(CQuantumRuntimeIdentity &other)
+   bool SameRuntimeAs(const CQuantumRuntimeIdentity &other) const
    {
       return (m_initialized && other.IsInitialized() &&
               m_symbol == other.Symbol() &&

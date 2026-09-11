@@ -7,10 +7,10 @@ Current Phase:
 PHASE 1.2
 
 Overall Progress:
-12%
+6%
 
 Last Updated:
-2026-08-25
+2026-09-09
 
 ---
 
@@ -19,8 +19,8 @@ Last Updated:
 | Phase | Description | Status | Progress |
 |------|-------------|--------|----------|
 | P0 | Repository & Tracking | COMPLETE | 100% |
-| P1 | Core Infrastructure | IN PROGRESS | 12% |
-| P2 | Runtime Identity | VERIFIED | 100% |
+| P1 | Core Infrastructure | IN PROGRESS | 6% |
+| P2 | Runtime Identity | NOT VERIFIED | 0% |
 | P3 | Engine Lifecycle | PLANNED | 0% |
 | P4 | Market Context / Snapshot | PLANNED | 0% |
 | P5 | Configuration | PLANNED | 0% |
@@ -36,7 +36,7 @@ Last Updated:
 | P15 | Dashboard / Analytics | NOT STARTED | 0% |
 | P16 | Integration / Validation / Release | NOT STARTED | 0% |
 
-Overall progress is 2 verified implementation units out of 17 roadmap implementation units. Progress is calculated from verified implementation units, not from lines of code or file count.
+Overall progress is 1 verified implementation unit out of 17 roadmap implementation units. Progress is calculated from verified implementation units, not from lines of code or file count.
 
 ---
 
@@ -70,11 +70,16 @@ Files Completed:
 
 Tests Planned:
 - Valid identity initialization.
+- Leading/trailing whitespace rejection for StrategyID, InstanceID, and Symbol.
 - Invalid StrategyID, InstanceID, and Symbol rejection.
 - Symbol binding preservation.
 - Same identity inputs produce the same Magic Number.
 - Same symbol with different InstanceID remains distinguishable.
+- Same StrategyID and InstanceID with a different Symbol produces a different Magic Number.
+- Delimiter-containing fields remain unambiguous in Magic Number derivation.
 - Same symbol and instance with different StrategyID remains distinguishable.
+- Retry after failed initialization preserves clean state and supports valid initialization.
+- Uninitialized ownership and runtime comparisons return false.
 - Reinitialization/mutation after initialization is rejected.
 - Explicit error/result reporting on invalid initialization.
 - Static checks for no hidden shared state, no cross-instance communication, no trading logic, and no later-phase leakage.
@@ -85,18 +90,19 @@ Tests Completed:
 - Static dependency check with `rg -n "GlobalVariable|FILE_COMMON|CTrade|OrderSend|PositionSelect|CopyRates|iATR|iMA|OnTick|OnTradeTransaction" Include/Core Include/Tests`.
 - Static scope check with a Python assertion script for required files and forbidden runtime/trading concepts.
 - Test source review with `nl -ba Include/Tests/TestRuntimeIdentity.mq5`.
+- Required-fix test cases added for whitespace, symbol differentiation, retry-after-failure, uninitialized comparisons, and delimiter ambiguity; MQL5 execution remains pending.
 
 Architecture Status:
-COMPLIANT — RuntimeIdentity is local to one runtime instance, includes StrategyID, InstanceID, Symbol, and MagicNumber, preserves Symbol != complete identity, avoids hidden shared state, avoids broker execution and position management, and does not implement later phases.
+COMPLIANT — RuntimeIdentity remains local to one runtime instance, includes StrategyID, InstanceID, Symbol, and MagicNumber, preserves Symbol != complete identity, avoids hidden shared state, avoids broker execution and position management, and does not implement later phases.
 
 Implementation Status:
-VERIFIED
+REQUIRED FIXES APPLIED; NOT VERIFIED
 
 Verification Status:
-STATIC VERIFICATION COMPLETE; MQL5 compilation unavailable in current environment.
+REQUIRED FIXES AND TEST UPDATES IMPLEMENTED. A MetaEditor compiler attempt found MQL5-incompatible numeric literals in RuntimeIdentity; those literals have been corrected pending another MetaEditor compilation. P1.2 remains NOT VERIFIED pending actual compilation/runtime verification.
 
 Known Issues:
-- MQL5 compilation could not be executed in the current environment.
+- MQL5 compilation requires local MetaEditor verification. A previous MetaEditor attempt found numeric-literal compatibility errors in RuntimeIdentity; the source correction is pending another compile.
 - ADR-001 requires the final identifier-generation mechanism to be deterministic, explicit, MQL5-friendly, and not unnecessarily complicated, but does not prescribe a concrete algorithm. P1.2 uses a small local 32-bit FNV-1a-derived deterministic calculation and records this implementation decision for review.
 
 Blocked Items:
@@ -114,7 +120,7 @@ WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
 | Implementation readiness inspection | VERIFIED | Documentation review completed; no code compilation required |
 | Implementation progress ledger cleanup | VERIFIED | Conflict-marker scan completed; no markers remain |
 | Phase 1.1 core foundation primitives | VERIFIED | Static verification completed; MQL5 compilation unavailable |
-| Phase 1.2 runtime identity | VERIFIED | Static verification completed; MQL5 compilation unavailable |
+| Phase 1.2 runtime identity | NOT VERIFIED | Required fixes applied; MQL5 compilation not performed in this environment |
 
 ---
 
@@ -131,7 +137,7 @@ WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
 | Component | Status |
 |----------|--------|
 | Core foundation primitives | VERIFIED |
-| Runtime identity | VERIFIED |
+| Runtime identity | NOT VERIFIED |
 | Engine lifecycle base | PLANNED |
 | Market context snapshot | PLANNED |
 | Configuration model | PLANNED |
@@ -216,7 +222,7 @@ Static verification completed; MQL5 compilation unavailable in current environme
 ### P1.2 — Runtime Identity
 
 Status:
-VERIFIED
+NOT VERIFIED
 
 Files Completed:
 - Include/Core/RuntimeIdentity.mqh
@@ -224,7 +230,17 @@ Files Completed:
 - IMPLEMENTATION_PROGRESS.md
 
 Verification:
-Static verification completed; MQL5 compilation unavailable in current environment.
+Required fixes applied and test coverage updated. A MetaEditor compiler attempt found MQL5-incompatible numeric literals in RuntimeIdentity; the source correction is pending another MetaEditor compilation. P1.2 remains NOT VERIFIED pending actual compilation/runtime verification.
+
+---
+
+## Required Fix Record
+
+| Date | Component | Change | Verification Status |
+|------|-----------|--------|---------------------|
+| 2026-09-09 | P1.2 Runtime Identity | Replaced delimiter-based hashing with fixed-order length-prefixed FNV-1a field hashing; added leading/trailing whitespace rejection and const-correct read API. | NOT VERIFIED; MQL5 compilation not performed in this environment. |
+| 2026-09-09 | P1.2 Runtime Identity tests | Added symbol differentiation, retry-after-failure, uninitialized comparison, delimiter ambiguity, and whitespace regression coverage. | NOT VERIFIED pending actual compilation/runtime verification. |
+| 2026-09-10 | P1.2 Runtime Identity | Replaced C/C++-suffixed hexadecimal numeric literals with MQL5-compatible decimal arithmetic and casts after MetaEditor reported numeric-literal errors. | NOT VERIFIED; another local MetaEditor compilation is required. |
 
 ---
 
