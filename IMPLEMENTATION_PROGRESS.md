@@ -21,7 +21,7 @@ Last Updated:
 | P0 | Repository & Tracking | COMPLETE | 100% |
 | P1 | Core Infrastructure | IN PROGRESS | 12% |
 | P1.2 | Runtime Identity | VERIFIED | 100% |
-| P3 | Engine Lifecycle | PLANNED | 0% |
+| P1.3 | Engine Lifecycle | IMPLEMENTED | 100% |
 | P4 | Market Context / Snapshot | PLANNED | 0% |
 | P5 | Configuration | PLANNED | 0% |
 | P6 | Event / Cycle System | PLANNED | 0% |
@@ -56,10 +56,10 @@ Dependencies:
 - P1.2 Runtime Identity (VERIFIED).
 
 Implementation Status:
-PLANNED — no P1.3 implementation is included in this update.
+IMPLEMENTED — static verification completed; MetaEditor compilation and MetaTrader runtime verification are pending.
 
 Next Step:
-WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
+CLAUDE REVIEW of P1.3 — Engine Lifecycle.
 
 ---
 
@@ -78,7 +78,7 @@ WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
 
 | Component | Status | Verification |
 |----------|--------|--------------|
-| Phase 1.3 engine lifecycle | PLANNED | Waiting for approval |
+| Phase 1.3 engine lifecycle | IMPLEMENTED | Static verification passed; MetaEditor compilation and MetaTrader runtime execution pending |
 
 ---
 
@@ -88,7 +88,7 @@ WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
 |----------|--------|
 | Core foundation primitives | VERIFIED |
 | Runtime identity | VERIFIED |
-| Engine lifecycle base | PLANNED |
+| Engine lifecycle base | IMPLEMENTED |
 | Market context snapshot | PLANNED |
 | Configuration model | PLANNED |
 | Event / cycle mechanism | PLANNED |
@@ -132,6 +132,8 @@ WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
 | 2026-08-25 | Phase 1.2 MQL5 compilation | Not run | MQL5 compilation unavailable in current environment |
 | 2026-09-11 | Phase 1.2 MetaEditor compilation | Owner-local MetaEditor compilation of `TestRuntimeIdentity.mq5` | PASSED; 0 errors, 0 warnings |
 | 2026-09-11 | Phase 1.2 runtime execution | Owner-local MetaTrader 5 execution of `TestRuntimeIdentity.mq5` | PASSED; 66/66 tests; no FAIL results reported |
+| 2026-09-11 | Phase 1.3 structure and scope | `rg` source, dependency, lifecycle-abstraction, and test-assertion scans | PASSED; one lifecycle abstraction, 49 test assertions, no forbidden trading/terminal dependencies in P1.3 files |
+| 2026-09-11 | Phase 1.3 MQL5 compilation | Not run | MQL5 compilation not available in current environment |
 
 ---
 
@@ -147,6 +149,7 @@ WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
 | D-0006 | Implement RuntimeIdentity as `CQuantumRuntimeIdentity` with initialize-once semantics and read-only accessors. | Contracts require RuntimeIdentity to be resolved once at OnInit and immutable for the runtime lifetime. |
 | D-0007 | Derive MagicNumber from StrategyID, Symbol, and InstanceID using a small deterministic FNV-1a calculation. | ADR-001 and Shared Data Objects require deterministic derivation but do not prescribe a concrete algorithm; this is the smallest explicit MQL5-friendly solution used for review. |
 | D-0008 | Keep RuntimeIdentity free of direct chart lookup and pass the bound symbol explicitly. | The Platform Layer owns terminal/chart interaction; this keeps RuntimeIdentity independently testable and free of hidden terminal dependency. |
+| D-0009 | Implement `CQuantumEngineLifecycle` as a minimal Created → Initialized → Running → Stopped state machine, with Stopped terminal. | No governing document defines more detailed engine lifecycle states; this is the smallest explicit model permitted for P1.3 and prevents invalid transition reuse. |
 
 ---
 
@@ -185,6 +188,28 @@ Files Completed:
 Verification:
 Owner-supplied verification performed in the local MetaTrader 5 / MetaEditor environment: MetaEditor compilation of `TestRuntimeIdentity.mq5` PASSED with 0 errors and 0 warnings, and runtime execution PASSED with 66/66 tests and no FAIL results. P1.1 runtime execution of `TestCoreFoundationPrimitives.mq5` also PASSED with 22/22 tests. Required fixes were implemented and subsequently verified. No architecture changes were required.
 
+### P1.3 — Engine Lifecycle
+
+Status:
+IMPLEMENTED
+
+Files Completed:
+- Include/Core/EngineLifecycle.mqh
+- Include/Tests/TestEngineLifecycle.mq5
+- IMPLEMENTATION_PROGRESS.md
+
+Implementation:
+Added the minimal `CQuantumEngineLifecycle` state machine: Created → Initialized → Running → Stopped. Initialization requires the existing initialized `CQuantumRuntimeIdentity`; no identity fields are copied or mutated. Stopped is terminal, so restart and reinitialization require a new engine instance.
+
+Static Verification:
+Passed source, dependency, lifecycle-abstraction, and test-assertion scans. The P1.3 implementation and test contain no `GlobalVariable`, `FILE_COMMON`, `CTrade`, `OrderSend`, `PositionSelect`, `CopyRates`, `iATR`, `iMA`, `OnTick`, or `OnTradeTransaction` dependency. The dedicated test script contains 49 assertions covering initial state, deterministic initialization, start/stop, invalid transitions, result status/error codes, terminal behavior, instance isolation, and RuntimeIdentity non-mutation.
+
+Compilation:
+MQL5 compilation not available in current environment.
+
+Runtime Verification:
+Pending MetaTrader 5 execution of `TestEngineLifecycle.mq5`. No compilation or runtime result is claimed by this update.
+
 ---
 
 ## Required Fix Record
@@ -199,4 +224,4 @@ Owner-supplied verification performed in the local MetaTrader 5 / MetaEditor env
 
 ## Next Action
 
-WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
+P1.3 READY FOR CLAUDE REVIEW.
