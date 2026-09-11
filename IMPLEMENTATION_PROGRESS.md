@@ -4,13 +4,13 @@ Status:
 IMPLEMENTATION IN PROGRESS
 
 Current Phase:
-PHASE 1.2
+PHASE 1.3
 
 Overall Progress:
-6%
+12%
 
 Last Updated:
-2026-09-09
+2026-09-11
 
 ---
 
@@ -19,8 +19,8 @@ Last Updated:
 | Phase | Description | Status | Progress |
 |------|-------------|--------|----------|
 | P0 | Repository & Tracking | COMPLETE | 100% |
-| P1 | Core Infrastructure | IN PROGRESS | 6% |
-| P2 | Runtime Identity | NOT VERIFIED | 0% |
+| P1 | Core Infrastructure | IN PROGRESS | 12% |
+| P1.2 | Runtime Identity | VERIFIED | 100% |
 | P3 | Engine Lifecycle | PLANNED | 0% |
 | P4 | Market Context / Snapshot | PLANNED | 0% |
 | P5 | Configuration | PLANNED | 0% |
@@ -36,77 +36,27 @@ Last Updated:
 | P15 | Dashboard / Analytics | NOT STARTED | 0% |
 | P16 | Integration / Validation / Release | NOT STARTED | 0% |
 
-Overall progress is 1 verified implementation unit out of 17 roadmap implementation units. Progress is calculated from verified implementation units, not from lines of code or file count.
+Overall progress is 2 verified implementation units out of 17 roadmap implementation units. Progress is calculated from verified implementation units, not from lines of code or file count.
 
 ---
 
 ## Current Phase
 
 Phase:
-P1.2
+P1.3
 
 Phase Name:
-Runtime Identity
+Engine Lifecycle
 
 Objective:
-Implement and verify the canonical immutable identity for one running Quantum runtime instance: Strategy ID, Instance ID, Symbol, and deterministic Magic Number.
+Implement the Engine Lifecycle phase after separate approval.
 
 Dependencies:
-- SYSTEM_ARCHITECTURE.md symbol-scoped runtime and immutable runtime identity rules.
-- ADR-001 symbol-scoped runtime architecture and instance identity requirements.
-- Contracts/Shared Data Objects.md RuntimeIdentity contract.
-- Include/Core/Types.mqh Phase 1.1 result/error primitives.
-- Project Structure.md Include/Core and Include/Tests placement.
-
-Files Planned:
-- Include/Core/RuntimeIdentity.mqh
-- Include/Tests/TestRuntimeIdentity.mq5
-- IMPLEMENTATION_PROGRESS.md
-
-Files Completed:
-- Include/Core/RuntimeIdentity.mqh
-- Include/Tests/TestRuntimeIdentity.mq5
-- IMPLEMENTATION_PROGRESS.md
-
-Tests Planned:
-- Valid identity initialization.
-- Leading/trailing whitespace rejection for StrategyID, InstanceID, and Symbol.
-- Invalid StrategyID, InstanceID, and Symbol rejection.
-- Symbol binding preservation.
-- Same identity inputs produce the same Magic Number.
-- Same symbol with different InstanceID remains distinguishable.
-- Same StrategyID and InstanceID with a different Symbol produces a different Magic Number.
-- Delimiter-containing fields remain unambiguous in Magic Number derivation.
-- Same symbol and instance with different StrategyID remains distinguishable.
-- Retry after failed initialization preserves clean state and supports valid initialization.
-- Uninitialized ownership and runtime comparisons return false.
-- Reinitialization/mutation after initialization is rejected.
-- Explicit error/result reporting on invalid initialization.
-- Static checks for no hidden shared state, no cross-instance communication, no trading logic, and no later-phase leakage.
-
-Tests Completed:
-- Conflict-marker scan with ripgrep for Git conflict marker tokens.
-- Static structural check with `find Include -maxdepth 3 -type f -print`.
-- Static dependency check with `rg -n "GlobalVariable|FILE_COMMON|CTrade|OrderSend|PositionSelect|CopyRates|iATR|iMA|OnTick|OnTradeTransaction" Include/Core Include/Tests`.
-- Static scope check with a Python assertion script for required files and forbidden runtime/trading concepts.
-- Test source review with `nl -ba Include/Tests/TestRuntimeIdentity.mq5`.
-- Required-fix test cases added for whitespace, symbol differentiation, retry-after-failure, uninitialized comparisons, and delimiter ambiguity; MQL5 execution remains pending.
-
-Architecture Status:
-COMPLIANT — RuntimeIdentity remains local to one runtime instance, includes StrategyID, InstanceID, Symbol, and MagicNumber, preserves Symbol != complete identity, avoids hidden shared state, avoids broker execution and position management, and does not implement later phases.
+- P1.1 Core Foundation Primitives (VERIFIED).
+- P1.2 Runtime Identity (VERIFIED).
 
 Implementation Status:
-REQUIRED FIXES APPLIED; NOT VERIFIED
-
-Verification Status:
-REQUIRED FIXES AND TEST UPDATES IMPLEMENTED. A MetaEditor compiler attempt found MQL5-incompatible numeric literals in RuntimeIdentity; those literals have been corrected pending another MetaEditor compilation. P1.2 remains NOT VERIFIED pending actual compilation/runtime verification.
-
-Known Issues:
-- MQL5 compilation requires local MetaEditor verification. A previous MetaEditor attempt found numeric-literal compatibility errors in RuntimeIdentity; the source correction is pending another compile.
-- ADR-001 requires the final identifier-generation mechanism to be deterministic, explicit, MQL5-friendly, and not unnecessarily complicated, but does not prescribe a concrete algorithm. P1.2 uses a small local 32-bit FNV-1a-derived deterministic calculation and records this implementation decision for review.
-
-Blocked Items:
-- Engine Lifecycle remains blocked pending separate P1.3 approval.
+PLANNED — no P1.3 implementation is included in this update.
 
 Next Step:
 WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
@@ -119,8 +69,8 @@ WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
 |----------|--------|----------|
 | Implementation readiness inspection | VERIFIED | Documentation review completed; no code compilation required |
 | Implementation progress ledger cleanup | VERIFIED | Conflict-marker scan completed; no markers remain |
-| Phase 1.1 core foundation primitives | VERIFIED | Static verification completed; MQL5 compilation unavailable |
-| Phase 1.2 runtime identity | NOT VERIFIED | Required fixes applied; MQL5 compilation not performed in this environment |
+| Phase 1.1 core foundation primitives | VERIFIED | Owner-local MetaTrader 5 runtime execution passed: 22/22 tests |
+| Phase 1.2 runtime identity | VERIFIED | Owner-local MetaEditor compilation passed: 0 errors, 0 warnings; runtime execution passed: 66/66 tests |
 
 ---
 
@@ -137,7 +87,7 @@ WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
 | Component | Status |
 |----------|--------|
 | Core foundation primitives | VERIFIED |
-| Runtime identity | NOT VERIFIED |
+| Runtime identity | VERIFIED |
 | Engine lifecycle base | PLANNED |
 | Market context snapshot | PLANNED |
 | Configuration model | PLANNED |
@@ -174,11 +124,14 @@ WAITING FOR APPROVAL for P1.3 — Engine Lifecycle.
 | 2026-08-19 | Phase 1.1 structure | `find Include -maxdepth 3 -type f -print` | PASSED |
 | 2026-08-19 | Phase 1.1 dependency scan | `rg -n "#include|GlobalVariable|FILE_COMMON|CTrade|OrderSend|PositionSelect|CopyRates|iATR|iMA" Include` | PASSED; only the test include was found |
 | 2026-08-19 | Phase 1.1 MQL5 compilation | Not run | MQL5 compilation unavailable in current environment |
+| 2026-09-11 | Phase 1.1 runtime execution | Owner-local MetaTrader 5 execution of `TestCoreFoundationPrimitives.mq5` | PASSED; 22/22 tests |
 | 2026-08-25 | Progress ledger cleanup | ripgrep conflict-marker scan | PASSED; no conflict markers remain |
 | 2026-08-25 | Phase 1.2 structure | `find Include -maxdepth 3 -type f -print` | PASSED |
 | 2026-08-25 | Phase 1.2 dependency scan | `rg -n "GlobalVariable|FILE_COMMON|CTrade|OrderSend|PositionSelect|CopyRates|iATR|iMA|OnTick|OnTradeTransaction" Include/Core Include/Tests` | PASSED; no forbidden runtime/trading dependencies found |
 | 2026-08-25 | Phase 1.2 scope assertions | Python static assertion script | PASSED |
 | 2026-08-25 | Phase 1.2 MQL5 compilation | Not run | MQL5 compilation unavailable in current environment |
+| 2026-09-11 | Phase 1.2 MetaEditor compilation | Owner-local MetaEditor compilation of `TestRuntimeIdentity.mq5` | PASSED; 0 errors, 0 warnings |
+| 2026-09-11 | Phase 1.2 runtime execution | Owner-local MetaTrader 5 execution of `TestRuntimeIdentity.mq5` | PASSED; 66/66 tests; no FAIL results reported |
 
 ---
 
@@ -217,12 +170,12 @@ Files Completed:
 - Include/Tests/TestCoreFoundationPrimitives.mq5
 
 Verification:
-Static verification completed; MQL5 compilation unavailable in current environment.
+Owner-local MetaTrader 5 runtime execution of `TestCoreFoundationPrimitives.mq5` passed: 22/22 tests.
 
 ### P1.2 — Runtime Identity
 
 Status:
-NOT VERIFIED
+VERIFIED
 
 Files Completed:
 - Include/Core/RuntimeIdentity.mqh
@@ -230,7 +183,7 @@ Files Completed:
 - IMPLEMENTATION_PROGRESS.md
 
 Verification:
-Required fixes applied and test coverage updated. A MetaEditor compiler attempt found MQL5-incompatible numeric literals in RuntimeIdentity; the source correction is pending another MetaEditor compilation. P1.2 remains NOT VERIFIED pending actual compilation/runtime verification.
+Owner-supplied verification performed in the local MetaTrader 5 / MetaEditor environment: MetaEditor compilation of `TestRuntimeIdentity.mq5` PASSED with 0 errors and 0 warnings, and runtime execution PASSED with 66/66 tests and no FAIL results. P1.1 runtime execution of `TestCoreFoundationPrimitives.mq5` also PASSED with 22/22 tests. Required fixes were implemented and subsequently verified. No architecture changes were required.
 
 ---
 
@@ -238,9 +191,9 @@ Required fixes applied and test coverage updated. A MetaEditor compiler attempt 
 
 | Date | Component | Change | Verification Status |
 |------|-----------|--------|---------------------|
-| 2026-09-09 | P1.2 Runtime Identity | Replaced delimiter-based hashing with fixed-order length-prefixed FNV-1a field hashing; added leading/trailing whitespace rejection and const-correct read API. | NOT VERIFIED; MQL5 compilation not performed in this environment. |
-| 2026-09-09 | P1.2 Runtime Identity tests | Added symbol differentiation, retry-after-failure, uninitialized comparison, delimiter ambiguity, and whitespace regression coverage. | NOT VERIFIED pending actual compilation/runtime verification. |
-| 2026-09-10 | P1.2 Runtime Identity | Replaced C/C++-suffixed hexadecimal numeric literals with MQL5-compatible decimal arithmetic and casts after MetaEditor reported numeric-literal errors. | NOT VERIFIED; another local MetaEditor compilation is required. |
+| 2026-09-09 | P1.2 Runtime Identity | Replaced delimiter-based hashing with fixed-order length-prefixed FNV-1a field hashing; added leading/trailing whitespace rejection and const-correct read API. | VERIFIED by owner-local MetaEditor compilation (0 errors, 0 warnings) and MetaTrader 5 runtime execution (66/66 tests). |
+| 2026-09-09 | P1.2 Runtime Identity tests | Added symbol differentiation, retry-after-failure, uninitialized comparison, delimiter ambiguity, and whitespace regression coverage. | VERIFIED by owner-local MetaTrader 5 runtime execution: 66/66 tests. |
+| 2026-09-10 | P1.2 Runtime Identity | Replaced C/C++-suffixed hexadecimal numeric literals with MQL5-compatible decimal arithmetic and casts after MetaEditor reported numeric-literal errors. | VERIFIED by subsequent owner-local MetaEditor compilation: 0 errors, 0 warnings; runtime execution: 66/66 tests. |
 
 ---
 
