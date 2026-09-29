@@ -58,15 +58,19 @@ private:
 public:
    CQuantumMarketContext()
    {
+      // MqlTick is a native struct with no constructor of its own, and its
+      // members are NOT guaranteed to be zeroed on declaration (a runtime
+      // test observed a garbage ask value of about -2.46e+260). Zero the
+      // whole structure explicitly so an uninitialized context exposes a
+      // deterministic all-zero tick. Do not remove.
+      ZeroMemory(m_tick);
+
       m_initialized = false;
       m_cycle_id = 0;
       m_symbol = "";
       m_timeframe = PERIOD_CURRENT;
       m_account_balance = 0.0;
       m_account_equity = 0.0;
-      // m_tick is a native MQL5 struct with no constructor of its own;
-      // MQL5 zero-initializes struct members on declaration, so no
-      // explicit field-by-field reset is required here.
    }
 
    bool Initialize(const CQuantumRuntimeIdentity &runtime_identity,

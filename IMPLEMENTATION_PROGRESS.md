@@ -7,10 +7,10 @@ Current Phase:
 PHASE 1.5
 
 Overall Progress:
-18%
+12%
 
 Last Updated:
-2026-09-23
+2026-09-29
 
 ---
 
@@ -22,7 +22,7 @@ Last Updated:
 | P1 | Core Infrastructure | IN PROGRESS | 12% |
 | P1.2 | Runtime Identity | VERIFIED | 100% |
 | P1.3 | Engine Lifecycle | IMPLEMENTED | 100% |
-| P1.4 | Market Context / Snapshot | VERIFIED | 100% |
+| P1.4 | Market Context / Snapshot | IMPLEMENTED | 100% |
 | P1.5 | Configuration | IMPLEMENTED | 100% |
 | P6 | Event / Cycle System | PLANNED | 0% |
 | P7 | Logging / Observability Foundation | PLANNED | 0% |
@@ -36,7 +36,7 @@ Last Updated:
 | P15 | Dashboard / Analytics | NOT STARTED | 0% |
 | P16 | Integration / Validation / Release | NOT STARTED | 0% |
 
-Overall progress is 3 verified implementation units out of 17 roadmap implementation units. Progress is calculated from verified implementation units, not from lines of code or file count.
+Overall progress is 2 verified implementation units out of 17 roadmap implementation units (P1.4 was returned from VERIFIED to IMPLEMENTED on 2026-09-29 pending owner re-verification of the corrected source; see D-0022). Progress is calculated from verified implementation units, not from lines of code or file count.
 
 ---
 
@@ -71,7 +71,6 @@ CTO (ChatGPT) architecture review of P1.5 — Configuration. Claude self-review 
 | Implementation progress ledger cleanup | VERIFIED | Conflict-marker scan completed; no markers remain |
 | Phase 1.1 core foundation primitives | VERIFIED | Owner-local MetaTrader 5 runtime execution passed: 22/22 tests |
 | Phase 1.2 runtime identity | VERIFIED | Owner-local MetaEditor compilation passed: 0 errors, 0 warnings; runtime execution passed: 66/66 tests |
-| Phase 1.4 market context / snapshot | VERIFIED | Owner-reported (2026-09-23): runtime execution passed 65/65 tests; see ISSUE-001 regarding compilation-detail and source-consistency caveats |
 
 ---
 
@@ -80,6 +79,7 @@ CTO (ChatGPT) architecture review of P1.5 — Configuration. Claude self-review 
 | Component | Status | Verification |
 |----------|--------|--------------|
 | Phase 1.3 engine lifecycle | IMPLEMENTED | Static verification passed; owner-local MetaTrader 5 runtime execution PASSED: 49/49 tests; MetaEditor compilation evidence not yet available |
+| Phase 1.4 market context / snapshot | IMPLEMENTED | Corrective cleanup applied 2026-09-29 (canonical filenames confirmed; `MqlTick` explicitly zero-initialized in the constructor); static verification passed; MetaEditor compilation and owner MetaTrader 5 runtime re-verification pending. The earlier owner-reported 65/65 PASS predates the source correction and is not re-claimed |
 | Phase 1.5 configuration | IMPLEMENTED | Static verification passed; MetaEditor compilation and MetaTrader runtime execution pending |
 
 ---
@@ -115,7 +115,7 @@ CTO (ChatGPT) architecture review of P1.5 — Configuration. Claude self-review 
 | NOTE-001 | RuntimeIdentity MagicNumber contract requires deterministic derivation but does not mandate an exact algorithm. | INFO | RECORDED; implemented smallest deterministic local calculation for review |
 | NOTE-002 | Shared Data Objects contract states MarketContext carries "price and account state at that instant" conceptually, without prescribing exact fields. Implemented the smallest defensible capture: one native `MqlTick` for price state, and `AccountBalance`/`AccountEquity` only for account state. `Margin`/`FreeMargin` were deliberately excluded as speculative, since no accepted contract yet assigns MarketContext (rather than a future Risk Engine query) as their owner. | INFO | RECORDED; open for CTO confirmation or expansion |
 | NOTE-003 | Neither Shared Data Objects.md nor any other contract defines an exact Configuration schema. Implemented the smallest defensible Instance Configuration (ADR-001 Section 20): `Symbol`, `StrategyID`, `InstanceID` (raw pre-initialization inputs for a future `CQuantumRuntimeIdentity.Initialize()` call — Shared Data Objects.md lists RuntimeIdentity's owner as "Platform Layer / Configuration Engine") and `WorkingTimeframe` (already required by `CQuantumMarketContext.Initialize()`). No risk, execution, or analysis parameters were added. `Config.mqh` depends only on `Types.mqh`; it does not include `RuntimeIdentity.mqh`, computes no MagicNumber, and exposes no ownership-matching method, so it cannot become a second identity authority. | INFO | RECORDED; open for CTO confirmation or expansion |
-| ISSUE-001 | Two discrepancies discovered on re-inspecting the repository before starting P1.5, both in the already-committed P1.4 files, neither touched by this P1.5 update: (1) the committed filenames are `Include/Core/Marketcontext.mqh` and `Include/Tests/Testmarketcontext.mq5` (lowercase), while the `#include` directive inside the test file still reads `"../Core/MarketContext.mqh"` (mixed case) and the original P1.4 report referred to both files with mixed-case names — an inconsistency this same P1.5 task instruction explicitly warned against repeating. (2) The instruction that raised P1.4 to VERIFIED stated "the implementation was corrected to explicitly initialize MqlTick," but the `Marketcontext.mqh` content currently in the repository is byte-for-byte the originally delivered version, which relies on MQL5's guaranteed zero-initialization of struct members rather than an explicit field-by-field reset — that corrective edit is not present in the file. Both are flagged here rather than fixed, since correcting P1.4 files is outside P1.5's authorized scope (Configuration only). | WARNING | OPEN — recommend the owner/CTO decide whether to rename the P1.4 files for consistent casing and/or apply the described explicit-MqlTick-initialization edit, in a dedicated P1.4 follow-up rather than folded into P1.5. |
+| ISSUE-001 | Two discrepancies discovered on re-inspecting the repository before starting P1.5, both in the already-committed P1.4 files, neither touched by this P1.5 update: (1) the committed filenames are `Include/Core/Marketcontext.mqh` and `Include/Tests/Testmarketcontext.mq5` (lowercase), while the `#include` directive inside the test file still reads `"../Core/MarketContext.mqh"` (mixed case) and the original P1.4 report referred to both files with mixed-case names — an inconsistency this same P1.5 task instruction explicitly warned against repeating. (2) The instruction that raised P1.4 to VERIFIED stated "the implementation was corrected to explicitly initialize MqlTick," but the `Marketcontext.mqh` content currently in the repository is byte-for-byte the originally delivered version, which relies on MQL5's guaranteed zero-initialization of struct members rather than an explicit field-by-field reset — that corrective edit is not present in the file. Both are flagged here rather than fixed, since correcting P1.4 files is outside P1.5's authorized scope (Configuration only). | WARNING | RESOLVED IN SOURCE (2026-09-29) — (1) canonical filenames `MarketContext.mqh` / `TestMarketContext.mq5` are in place (pure renames committed in `803a57f` and `e3ccfad`; re-verified by this cleanup: one canonical name each, no duplicates, all `#include` casing matches); (2) `ZeroMemory(m_tick)` was added to the `CQuantumMarketContext` constructor. The lowercase spellings above are retained only as the historical description of the defect. Closure of the runtime aspect is PENDING owner compilation and re-execution of `TestMarketContext.mq5` (see D-0021, D-0022). |
 
 ---
 
@@ -156,6 +156,15 @@ CTO (ChatGPT) architecture review of P1.5 — Configuration. Claude self-review 
 | 2026-09-23 | Phase 1.5 test-assertion count | `grep` count of `AssertEqual*` calls in `TestConfig.mq5`, excluding the three helper definitions | PASSED; 61 assertions across 9 test functions |
 | 2026-09-23 | Phase 1.5 change-scope check | `git status --porcelain` | PASSED; only `Include/Core/Config.mqh` and `Include/Tests/TestConfig.mq5` added prior to this ledger update; no existing file modified |
 | 2026-09-23 | Phase 1.5 MQL5 compilation | Not run | MQL5 compilation not available in current environment |
+| 2026-09-29 | Phase 1.4 corrective: filename canonicalization | `git ls-files`, `git log --name-status` (commits `803a57f`, `e3ccfad`), case-insensitive whole-repository reference scan | PASSED; exactly one tracked path each for `Include/Core/MarketContext.mqh` and `Include/Tests/TestMarketContext.mq5`; no case-insensitive duplicate tracked paths; the only `#include` of MarketContext (`TestMarketContext.mq5:3`) matches the canonical case exactly; no non-canonical spelling remains in any `.mqh`/`.mq5` source. Renames were already present at HEAD (pure renames, 0 content change); this task did not perform a second rename |
+| 2026-09-29 | Phase 1.4 corrective: MqlTick initialization | Source edit to `CQuantumMarketContext` constructor: added `ZeroMemory(m_tick);` as the first constructor statement and replaced the incorrect comment that assumed implicit struct zero-initialization | APPLIED; scripted check confirms all 7 state fields (`m_initialized`, `m_cycle_id`, `m_symbol`, `m_timeframe`, `m_tick`, `m_account_balance`, `m_account_equity`) are explicitly initialized in the constructor. No test assertion was weakened or altered |
+| 2026-09-29 | Phase 1.4 corrective: dependency scan | Forbidden-dependency scan (`GlobalVariable`, `FILE_COMMON`, `CTrade`, `OrderSend`, `PositionSelect`, `OrderSelect`, `OnTradeTransaction`, `SymbolInfo*`, `CopyRates`, `CopyTicks`, `AccountInfo*`, `OnTick`, `OnTimer`, `TimeCurrent/Local/GMT`, `MathRand`) on `MarketContext.mqh` and `TestMarketContext.mq5` with comments and string literals stripped | PASSED; no calls. Raw-text matches exist only inside comments/string literals (`MarketContext.mqh` lines 25, 26, 130) |
+| 2026-09-29 | Phase 1.4 corrective: duplicate / analysis-logic scans | Repository-wide `class CQuantumMarketContext` count; analysis/decision/risk/execution keyword scan of code with comments stripped | PASSED; exactly one `CQuantumMarketContext` class and no other MarketContext-like class/struct; no analysis, decision, risk, or execution logic in code (keyword matches only in an explanatory comment stating what P1.4 does not do) |
+| 2026-09-29 | Phase 1.4 corrective: contract invariants (static) | Scripted source inspection of `MarketContext.mqh` | PASSED; `m_symbol` assigned only from `runtime_identity.Symbol()` with no independent symbol parameter; initialized-RuntimeIdentity, explicit-timeframe, non-zero-cycle-id checks present; initialize-once guard is checked first; no state written before the final validation passes; all public accessors are `const`; no setter; no terminal/IO call; single `#include` (`RuntimeIdentity.mqh`) |
+| 2026-09-29 | Phase 1.4 corrective: test-assertion count | Count of `AssertEqual*` calls in `TestMarketContext.mq5`, excluding the four helper definitions | PASSED; 65 assertions across 10 test functions, identical to before; `TestMarketContext.mq5` is byte-identical to HEAD (not modified by this task) |
+| 2026-09-29 | Phase 1.4 corrective: unmodified-file check | `git status --porcelain` / `git diff --stat` | PASSED; `Types.mqh`, `RuntimeIdentity.mqh`, `EngineLifecycle.mqh`, and `Config.mqh` (and every other file except `MarketContext.mqh` and this ledger) unmodified |
+| 2026-09-29 | Phase 1.4 corrective: MQL5 compilation | Not run | MQL5 compilation not available in current environment; MetaEditor compilation of the corrected source is owner-pending and is not claimed here |
+| 2026-09-29 | Phase 1.4 corrective: runtime execution | Not run | Not executed by this task. Owner-local MetaTrader 5 re-execution of `TestMarketContext.mq5` against the corrected source is REQUIRED; no PASS result is claimed for the corrected source |
 
 ---
 
@@ -181,8 +190,10 @@ CTO (ChatGPT) architecture review of P1.5 — Configuration. Claude self-review 
 | D-0016 | Implement `CQuantumConfig` covering `Symbol`, `StrategyID`, `InstanceID`, and `WorkingTimeframe` as the P1.5 Instance Configuration schema; add nothing else. | No contract defines an exact Configuration schema (Shared Data Objects.md has no dedicated Configuration entry). These four fields are the only ADR-001 Section 20 "Instance Configuration" examples that already have a concrete, currently-built consumer (`CQuantumRuntimeIdentity.Initialize()` and `CQuantumMarketContext.Initialize()`); every other example category (risk, execution, model parameters) has no current consumer and was excluded per the task's explicit scope-discipline instruction. Recorded as NOTE-003. |
 | D-0017 | Give `Config.mqh` a single dependency, `Types.mqh`; do not include `RuntimeIdentity.mqh`. | Configuration must remain low in the dependency hierarchy and independently testable. Config holds `Symbol`/`StrategyID`/`InstanceID` only as plain, independently-validated data — it never references `CQuantumRuntimeIdentity`'s type, computes no MagicNumber, and exposes no ownership-matching method, so it cannot become a second identity authority per ADR-001. |
 | D-0018 | Implement `CQuantumConfig` with the same initialize-once, no-setter idiom as `CQuantumRuntimeIdentity`, `CQuantumEngineLifecycle`, and `CQuantumMarketContext`, including its own independent non-empty/no-whitespace string validation and an explicit-timeframe check rejecting `PERIOD_CURRENT`. | Matches "Configuration must not have arbitrary public setters" and "validation must occur at initialization/startup" from the task instructions, and keeps the four foundation primitives consistent with one another. |
-| D-0019 | Do not modify `Include/Core/Marketcontext.mqh` or `Include/Tests/Testmarketcontext.mq5`, despite the discrepancies recorded in ISSUE-001. | P1.5's authorized scope is Configuration only; the task instructions require that "no unrelated architecture files were modified." The discrepancies are reported for an explicit owner/CTO decision instead of being silently corrected mid-scope. |
+| D-0019 | Do not modify `Include/Core/Marketcontext.mqh` or `Include/Tests/Testmarketcontext.mq5`, despite the discrepancies recorded in ISSUE-001. | P1.5's authorized scope is Configuration only; the task instructions require that "no unrelated architecture files were modified." The discrepancies are reported for an explicit owner/CTO decision instead of being silently corrected mid-scope. **Superseded by D-0021** (the authorized P1.4 corrective task, 2026-09-29). |
 | D-0020 | Relabel the "P5 — Configuration" row in the Overall Progress table to "P1.5". | Same documentation-only bookkeeping rationale as D-0015, applied consistently now that this unit is implemented. |
+| D-0021 | In the authorized P1.4 corrective cleanup, add `ZeroMemory(m_tick);` as the first statement of the `CQuantumMarketContext` constructor and confirm canonical filenames `MarketContext.mqh` / `TestMarketContext.mq5`; change nothing else in P1.4, and do not weaken or alter any test assertion. | An owner-local run exposed a non-deterministic uninitialized `MqlTick` (`ask` read back as about -2.46e+260), which disproved the constructor's comment that MQL5 zero-initializes struct members. The production object, not the test, must be made deterministic, and `ZeroMemory` is the smallest explicit fix. No `MarketContext` contract or API change. Resolves ISSUE-001 in source; supersedes D-0019. |
+| D-0022 | Return P1.4 from VERIFIED to IMPLEMENTED (re-verification pending) and reduce the overall verified-unit count from 3 to 2. | The earlier owner-reported 65/65 PASS was obtained against a locally corrected source that was never the committed source; the committed source has now been changed by D-0021, so no runtime evidence currently applies to it. The ledger's existing policy (see P1.3) is that VERIFIED requires evidence for the current source. The owner retains final authority on verification sign-off and may restore VERIFIED after re-running the corrected test. |
 
 ---
 
@@ -246,7 +257,7 @@ Owner-local MetaTrader 5 execution of `TestEngineLifecycle.mq5` PASSED: 49/49 te
 ### P1.4 — Market Context / Snapshot
 
 Status:
-VERIFIED
+IMPLEMENTED — corrective cleanup applied 2026-09-29; owner compilation and runtime re-verification pending
 
 Files Completed:
 - Include/Core/MarketContext.mqh
@@ -260,13 +271,13 @@ Static Verification:
 Passed source, dependency, duplicate-abstraction, and test-assertion scans. `MarketContext.mqh` and `TestMarketContext.mq5` contain no `GlobalVariable`, `FILE_COMMON`, `CTrade`, `OrderSend`, `PositionSelect`, `OrderSelect`, `OnTradeTransaction`, `SymbolInfoTick`, `CopyRates`, `AccountInfoDouble`, `OnTick`, `OnTimer`, `TimeCurrent`, or random-function call (the only textual matches were inside comments/string literals explaining the no-live-requery rule). No duplicate `RuntimeIdentity`, `MarketContext`, or `CycleID` abstraction exists anywhere in the repository. The dedicated test script contains 65 assertions across 10 test functions covering initial state, invalid RuntimeIdentity/timeframe/cycle-id/tick rejection, valid construction, immutability after publish (rejected re-initialization with all fields unchanged), snapshot isolation (including mutation of the caller's source tick after construction), RuntimeIdentity non-mutation and correct Symbol derivation, and determinism from identical explicit input. "No live re-query" is verified structurally (static source inspection), not by a runtime assertion.
 
 Compilation:
-Owner reports P1.4 as VERIFIED (2026-09-23). A separate itemized MetaEditor error/warning count (as was recorded for P1.2) was not supplied with this update and is not invented here; see ISSUE-001.
+MQL5 compilation is not available in this environment and was not performed for the corrected source. No itemized MetaEditor error/warning count has been supplied for P1.4 and none is invented here. Owner-local MetaEditor compilation of the corrected source is pending.
 
 Runtime Verification:
-Owner-local MetaTrader 5 execution of `TestMarketContext.mq5` PASSED: 65/65 tests (owner-reported, 2026-09-23).
+Not executed for the corrected source. History: an owner-reported run of `TestMarketContext.mq5` on 2026-09-23 stated 65/65 PASS, but only after a local correction that was never present in the committed source; that result therefore does not apply to the source as it now stands and is not re-claimed. Owner-local MetaTrader 5 re-execution of `TestMarketContext.mq5` against the corrected source is required before P1.4 can return to VERIFIED.
 
-Note:
-The same owner update stated "the implementation was corrected to explicitly initialize MqlTick." On re-inspecting the repository for P1.5, `Include/Core/Marketcontext.mqh` (committed under this lowercase filename, differing from the mixed-case `#include` that still references it) is unchanged from the originally delivered version and does not contain that edit. See ISSUE-001; not corrected here, as it falls outside P1.5's authorized scope.
+Corrective Cleanup (2026-09-29):
+(1) Filenames: the canonical names are `Include/Core/MarketContext.mqh` and `Include/Tests/TestMarketContext.mq5`. They were already in place at HEAD as pure renames (commits `803a57f` and `e3ccfad`), and this cleanup verified that exactly one tracked path exists for each, that no case-insensitive duplicate exists, and that the sole `#include` of MarketContext matches the canonical case exactly. (2) `MqlTick`: the `CQuantumMarketContext` constructor now begins with `ZeroMemory(m_tick);`, and the earlier incorrect comment assuming implicit struct zero-initialization was replaced. All seven state fields are now explicitly initialized in the constructor. The `MarketContext` contract, API, and all 65 test assertions are unchanged; no assertion was weakened. (3) The inconsistency described in ISSUE-001 (source not matching the owner's stated correction, and mixed-case naming) is corrected in source. Files `Types.mqh`, `RuntimeIdentity.mqh`, `EngineLifecycle.mqh`, and `Config.mqh` were not modified.
 
 ### P1.5 — Configuration
 
@@ -299,9 +310,12 @@ Runtime verification pending owner-local MetaTrader 5 execution.
 | 2026-09-09 | P1.2 Runtime Identity | Replaced delimiter-based hashing with fixed-order length-prefixed FNV-1a field hashing; added leading/trailing whitespace rejection and const-correct read API. | VERIFIED by owner-local MetaEditor compilation (0 errors, 0 warnings) and MetaTrader 5 runtime execution (66/66 tests). |
 | 2026-09-09 | P1.2 Runtime Identity tests | Added symbol differentiation, retry-after-failure, uninitialized comparison, delimiter ambiguity, and whitespace regression coverage. | VERIFIED by owner-local MetaTrader 5 runtime execution: 66/66 tests. |
 | 2026-09-10 | P1.2 Runtime Identity | Replaced C/C++-suffixed hexadecimal numeric literals with MQL5-compatible decimal arithmetic and casts after MetaEditor reported numeric-literal errors. | VERIFIED by subsequent owner-local MetaEditor compilation: 0 errors, 0 warnings; runtime execution: 66/66 tests. |
+| 2026-09-29 | P1.4 Market Context | Constructor now explicitly zero-initializes the `MqlTick` member via `ZeroMemory(m_tick);` (an owner-local run had read an uninitialized `ask` of about -2.46e+260); incorrect implicit-zero-initialization comment removed; canonical filenames `MarketContext.mqh` / `TestMarketContext.mq5` confirmed. | STATIC VERIFICATION PASSED; compilation and runtime re-execution PENDING owner-local verification. Not claimed as verified. |
 
 ---
 
 ## Next Action
 
 P1.5 READY FOR CTO REVIEW.
+
+P1.4 corrected source AWAITING OWNER VERIFICATION: compile `TestMarketContext.mq5` in MetaEditor and re-run it in MetaTrader 5; record the actual result here.
